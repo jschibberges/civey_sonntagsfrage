@@ -12,6 +12,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+          with:
+            token: ${{ secrets.GITHUB_TOKEN }}
+            persist-credentials: true
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -31,7 +34,8 @@ jobs:
           git config --global user.email "julian@schibberges.de"
           git config --global user.name "Julian"
           git add data.csv
-          git commit -m "Update data.csv"
+          git commit -m "Update data.csv" || echo "No changes to commit"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/jschibberges/civey_sonntagsfrage.git
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
