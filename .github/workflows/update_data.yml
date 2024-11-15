@@ -24,7 +24,7 @@ jobs:
           pip install pandas
 
       - name: Run the update script
-        run: python scripts/update_data.py
+        run: python scripts/get_data.py
 
       - name: Commit and push changes
         run: |
