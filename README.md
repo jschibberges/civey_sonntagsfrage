@@ -1,4 +1,4 @@
-# civey_sonntagsfrage
+# Civey-Sonntagsfrage: Data and small dashboard
 
 A project to automatically track and visualize the German federal election poll data ("Sonntagsfrage") from Civey.
 
