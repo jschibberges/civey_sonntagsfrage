@@ -16,25 +16,46 @@ def load_data():
     """Loads data from data.csv, robustly parsing dates and setting index."""
     file_path = "data.csv"
     
-    if os.path.exists(file_path):
-        try:
-            # Load the CSV, parsing the 'date' column.
-            # dayfirst=True helps correctly interpret DD.MM.YYYY format.
-            # This is more robust if your file contains mixed date formats.
-            data = pd.read_csv(
-                file_path, 
-                parse_dates=['date'],
-                dayfirst=True,
-                index_col='date'
-            )
-            data.sort_index(inplace=True) # Ensure data is sorted by date
-            return data
-        except Exception as e:
-            st.error(f"Error loading or parsing 'data.csv': {e}")
-            return pd.DataFrame()
-    else:
+    if not os.path.exists(file_path):
         st.error("Data file 'data.csv' not found. The data update might not have run yet.")
         return pd.DataFrame() # Return an empty DataFrame to prevent further errors
+
+    try:
+        data = pd.read_csv(file_path)
+        
+        # Explicitly handle mixed date formats to be more robust.
+        # First, try parsing the new format (YYYY-MM-DD).
+        parsed_dates = pd.to_datetime(data['date'], format='%Y-%m-%d', errors='coerce')
+        
+        # For rows that failed, try parsing the old format (DD.MM.YYYY).
+        failed_indices = parsed_dates.isna()
+        if failed_indices.any():
+            parsed_dates.loc[failed_indices] = pd.to_datetime(
+                data.loc[failed_indices, 'date'], format='%d.%m.%Y', errors='coerce'
+            )
+        
+        data['date'] = parsed_dates
+        
+        # Drop rows where the date could not be parsed in either format.
+        original_rows = len(data)
+        data.dropna(subset=['date'], inplace=True)
+        dropped_rows = original_rows - len(data)
+        if dropped_rows > 0:
+            st.warning(
+                f"Removed {dropped_rows} corrupted or unparseable row(s) from the data. "
+                f"Please run the `migrate_csv_layout.py` script to clean your `data.csv` file."
+            )
+
+        if data.empty:
+            st.error("No valid data could be loaded from 'data.csv'.")
+            return pd.DataFrame()
+
+        data.set_index('date', inplace=True)
+        data.sort_index(inplace=True) # Ensure data is sorted by date
+        return data
+    except Exception as e:
+        st.error(f"An unexpected error occurred while loading 'data.csv': {e}")
+        return pd.DataFrame()
 
 st.title('Civey: Trends Sonntagsfrage') 
 
