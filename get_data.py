@@ -75,6 +75,12 @@ def save_data(data: dict):
     
     try:
         if os.path.exists(DATA_FILE_PATH):
+            # Read existing headers to ensure column order is maintained
+            existing_df = pd.read_csv(DATA_FILE_PATH, nrows=0)
+            # Reorder new data to match existing file's column order
+            # This handles cases where the API might change the order of parties
+            new_df = new_df.reindex(columns=existing_df.columns)
+
             # Append without writing header
             new_df.to_csv(DATA_FILE_PATH, mode='a', header=False, index=False)
             print(f"Successfully appended new data to {DATA_FILE_PATH}.")
